@@ -51,6 +51,7 @@ func App() *buffalo.App {
 		app.GET("/", TasksIndex)
 		app.POST("/tasks", TasksCreate)
 		app.GET("/tasks/{task_id}/edit", TasksEdit)
+		app.PUT("/tasks/reorder", TasksReorder)
 		app.PUT("/tasks/{task_id}", TasksUpdate)
 		app.PUT("/tasks/{task_id}/toggle", TasksToggle)
 		app.DELETE("/tasks/{task_id}", TasksDestroy)

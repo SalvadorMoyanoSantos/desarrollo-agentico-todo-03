@@ -69,3 +69,23 @@ func (ms *ModelSuite) Test_Task_Toggle_Persists() {
 	ms.NoError(ms.DB.Find(reloaded, task.ID))
 	ms.True(reloaded.Completed)
 }
+
+func (ms *ModelSuite) Test_Task_Position_PersistsAndOrdersDeterministically() {
+	for _, task := range []*Task{
+		{Title: "B", Position: 2},
+		{Title: "A1", Position: 1},
+		{Title: "A2", Position: 1},
+	} {
+		verrs, err := ms.DB.ValidateAndCreate(task)
+		ms.NoError(err)
+		ms.False(verrs.HasAny())
+	}
+
+	tasks := Tasks{}
+	ms.NoError(ms.DB.Order(TaskOrder).All(&tasks))
+	ms.Len(tasks, 3)
+	ms.Equal(1, tasks[0].Position)
+	ms.Equal("A1", tasks[0].Title)
+	ms.Equal("A2", tasks[1].Title)
+	ms.Equal("B", tasks[2].Title)
+}
