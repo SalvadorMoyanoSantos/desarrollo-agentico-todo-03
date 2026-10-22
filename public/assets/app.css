@@ -23,6 +23,12 @@ form {
   --color-primary-hover: #992b1e;
   --color-focus: #245ab4;
   --color-danger: #a52b25;
+  --color-surface: #ffffff;
+  --color-primary-tint: #f7e9e4;
+  --radius: 6px;
+  --tap-size: 44px;
+  --border: 1px solid var(--color-border);
+  --transition-fast: 120ms ease;
   --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -32,7 +38,7 @@ body {
   font-size: 0.95rem;
   line-height: 1.5;
   color: var(--color-text);
-  background: #ffffff;
+  background: var(--color-surface);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -52,7 +58,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  min-height: 44px;
+  min-height: var(--tap-size);
   padding: 0 0.65rem;
   margin-bottom: 1.5rem;
   color: var(--color-text);
@@ -71,10 +77,10 @@ body {
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  min-height: 44px;
+  min-height: var(--tap-size);
   padding: 0.55rem 0.7rem;
-  border-radius: 6px;
-  background: #f7e9e4;
+  border-radius: var(--radius);
+  background: var(--color-primary-tint);
   color: #a03123;
   font-size: 0.9rem;
   font-weight: 600;
@@ -88,6 +94,33 @@ body {
 .nav-link svg {
   width: 1.2rem;
   height: 1.2rem;
+}
+
+.tap-target {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-size);
+  text-decoration: none;
+}
+
+.text-sm {
+  font-size: 0.85rem;
+}
+
+.text-xs {
+  font-size: 0.8rem;
+}
+
+.notice {
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+}
+
+.icon-outline {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .container {
@@ -112,7 +145,6 @@ h1 {
 .list-count {
   margin-top: 0.4rem;
   color: var(--color-muted);
-  font-size: 0.8rem;
 }
 
 .task-list {
@@ -121,12 +153,12 @@ h1 {
 
 .task {
   display: grid;
-  grid-template-columns: 28px 44px minmax(0, 1fr) auto;
+  grid-template-columns: 28px var(--tap-size) minmax(0, 1fr) auto;
   align-items: start;
   column-gap: 0.3rem;
   min-height: 61px;
   padding: 0.5rem 0;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border);
 }
 
 .task-title {
@@ -137,36 +169,30 @@ h1 {
   line-height: 1.55;
 }
 
-.task-toggle-button,
-.icon-action {
-  position: relative;
+.icon-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  width: 44px;
-  min-height: 44px;
+  min-height: var(--tap-size);
   padding: 0;
-  font: inherit;
   color: var(--color-muted);
   background: transparent;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius);
+}
+
+.task-toggle-button,
+.icon-action {
+  position: relative;
+  flex-shrink: 0;
+  width: var(--tap-size);
+  font: inherit;
   cursor: pointer;
   text-decoration: none;
 }
 
 .task-handle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 28px;
-  min-height: 44px;
-  padding: 0;
-  color: var(--color-muted);
-  background: transparent;
-  border: 0;
-  border-radius: 6px;
   cursor: grab;
   touch-action: none;
 }
@@ -198,8 +224,8 @@ h1 {
   height: 20px;
   border: 1.5px solid #858580;
   border-radius: 50%;
-  color: #ffffff;
-  transition: background-color 120ms ease, border-color 120ms ease;
+  color: var(--color-surface);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .completion-icon svg {
@@ -209,7 +235,7 @@ h1 {
 }
 
 .task-toggle-button:hover .completion-icon {
-  background: #f7e9e4;
+  background: var(--color-primary-tint);
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
@@ -272,8 +298,8 @@ h1 {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 44px;
-  height: 44px;
+  width: var(--tap-size);
+  height: var(--tap-size);
   color: var(--color-primary);
   font-size: 1.8rem;
   font-weight: 300;
@@ -283,13 +309,13 @@ h1 {
 input[type="text"] {
   width: 100%;
   min-width: 0;
-  min-height: 44px;
+  min-height: var(--tap-size);
   padding: 0.6rem 0.75rem;
   font: inherit;
   color: var(--color-text);
-  background: #ffffff;
+  background: var(--color-surface);
   border: 1px solid #92928a;
-  border-radius: 6px;
+  border-radius: var(--radius);
 }
 
 .new-task-row input {
@@ -306,21 +332,16 @@ input[aria-invalid="true"] {
 }
 
 .button {
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  min-height: 44px;
   padding: 0.6rem 0.9rem;
   border: 1px solid #dadad4;
-  border-radius: 6px;
+  border-radius: var(--radius);
   color: #41413d;
   background: #f6f6f2;
   font-family: inherit;
-  font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.5;
-  text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
 }
@@ -332,7 +353,7 @@ input[aria-invalid="true"] {
 .button-primary {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-surface);
 }
 
 .button-primary:hover {
@@ -350,16 +371,13 @@ input:focus-visible {
 .field-hint {
   margin-top: 0.65rem;
   color: var(--color-muted);
-  font-size: 0.8rem;
 }
 
 .field-error {
   margin-top: 0.75rem;
   padding: 0.7rem 0.85rem;
-  border-radius: 6px;
   color: #912a20;
   background: #fff0eb;
-  font-size: 0.85rem;
 }
 
 .empty-state {
@@ -371,9 +389,7 @@ input:focus-visible {
 .flash {
   margin-bottom: 1.25rem;
   padding: 0.75rem 0.9rem;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  font-size: 0.85rem;
+  border: var(--border);
 }
 
 .flash-success {
@@ -383,14 +399,9 @@ input:focus-visible {
 }
 
 .back-link {
-  display: inline-flex;
-  align-items: center;
   gap: 0.45rem;
-  min-height: 44px;
   margin-bottom: 1.1rem;
-  font-size: 0.85rem;
   color: var(--color-muted);
-  text-decoration: none;
 }
 
 .back-link:hover {
@@ -411,7 +422,7 @@ input:focus-visible {
   gap: 0.5rem;
   margin-top: 1.5rem;
   padding-top: 1.25rem;
-  border-top: 1px solid var(--color-border);
+  border-top: var(--border);
 }
 
 .sr-only,
@@ -430,7 +441,7 @@ input:focus-visible {
 @media (hover: hover) and (pointer: fine) {
   .task-actions {
     opacity: 0;
-    transition: opacity 120ms ease;
+    transition: opacity var(--transition-fast);
   }
 
   .task:hover .task-actions,
@@ -452,7 +463,7 @@ input:focus-visible {
     gap: 1rem;
     padding: 0.65rem 1rem;
     border-right: 0;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: var(--border);
   }
 
   .app-brand {
@@ -504,7 +515,7 @@ input:focus-visible {
   }
 
   .new-task-row input {
-    flex-basis: calc(100% - 44px);
+    flex-basis: calc(100% - var(--tap-size));
   }
 
   .new-task-row .button {
