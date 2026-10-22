@@ -372,3 +372,25 @@ func (as *ActionSuite) Test_TasksReorder_DoesNotMatchTaskID() {
 	res := as.HTML("/tasks/reorder").Put(url.Values{"ids": {}})
 	as.Equal(204, res.Code)
 }
+
+func (as *ActionSuite) Test_TasksReport_EmptyState() {
+	res := as.HTML("/report").Get()
+	as.Equal(200, res.Code)
+	as.Contains(res.Body.String(), "No hay tareas todavía")
+}
+
+func (as *ActionSuite) Test_TasksReport_Metrics() {
+	as.LoadFixture("tres tareas")
+
+	res := as.HTML("/report").Get()
+	as.Equal(200, res.Code)
+
+	body := res.Body.String()
+	as.Contains(body, "Informe de tareas")
+	as.Contains(body, "Comprar material de oficina")
+	as.Contains(body, "Llamar al gestor")
+	as.Contains(body, "Publicar la oferta de empleo")
+	as.Contains(body, "<dd>3</dd>")
+	as.Contains(body, "<dd>33 %</dd>")
+	as.Contains(body, `href="/report"`)
+}

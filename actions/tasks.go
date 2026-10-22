@@ -28,6 +28,20 @@ func TasksIndex(c buffalo.Context) error {
 	return c.Render(http.StatusOK, r.HTML("tasks/index.plush.html"))
 }
 
+// TasksReport muestra el informe de las tareas creadas.
+func TasksReport(c buffalo.Context) error {
+	tx := c.Value("tx").(*pop.Connection)
+
+	tasks := models.Tasks{}
+	if err := tx.Order(models.TaskOrder).All(&tasks); err != nil {
+		return err
+	}
+
+	c.Set("tasks", tasks)
+	c.Set("report", tasks.Report())
+	return c.Render(http.StatusOK, r.HTML("tasks/report.plush.html"))
+}
+
 // TasksCreate crea una tarea nueva a partir del formulario.
 func TasksCreate(c buffalo.Context) error {
 	tx := c.Value("tx").(*pop.Connection)

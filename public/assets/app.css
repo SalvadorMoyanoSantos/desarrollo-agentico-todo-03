@@ -519,3 +519,49 @@ input:focus-visible {
     transition: none !important;
   }
 }
+
+.nav-link:not([aria-current]) {
+  background: transparent;
+  color: var(--color-text);
+}
+
+.nav-link:not([aria-current]):hover {
+  background: var(--color-border);
+}
+
+.report-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.75rem;
+  margin: 0 0 1.5rem;
+}
+
+.report-metric {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.report-metric dt {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.report-metric dd {
+  margin: 0.2rem 0 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.report-table {
+  width: 100%;
+  margin-bottom: 1.5rem;
+  border-collapse: collapse;
+}
+
+.report-table th,
+.report-table td {
+  padding: 0.6rem 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}

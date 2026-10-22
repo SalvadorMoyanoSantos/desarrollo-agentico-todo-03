@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -41,4 +42,40 @@ func (t *Task) Validate(tx *pop.Connection) (*validate.Errors, error) {
 	}
 
 	return verrs, nil
+}
+
+// DayCount es el número de tareas creadas en un día.
+type DayCount struct {
+	Day   string
+	Count int
+}
+
+// TaskReport resume el estado de una colección de tareas.
+type TaskReport struct {
+	Total     int
+	Completed int
+	Pending   int
+	Percent   int
+	ByDay     []DayCount
+}
+
+// Report calcula el resumen de las tareas; los días van de más reciente a más antiguo.
+func (ts Tasks) Report() TaskReport {
+	r := TaskReport{Total: len(ts)}
+	counts := map[string]int{}
+	for _, t := range ts {
+		if t.Completed {
+			r.Completed++
+		}
+		counts[t.CreatedAt.UTC().Format("2006-01-02")]++
+	}
+	r.Pending = r.Total - r.Completed
+	if r.Total > 0 {
+		r.Percent = r.Completed * 100 / r.Total
+	}
+	for day, n := range counts {
+		r.ByDay = append(r.ByDay, DayCount{Day: day, Count: n})
+	}
+	sort.Slice(r.ByDay, func(i, j int) bool { return r.ByDay[i].Day > r.ByDay[j].Day })
+	return r
 }
