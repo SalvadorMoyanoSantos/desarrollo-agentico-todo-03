@@ -14,7 +14,7 @@
     <ul class="task-list" data-task-list data-reorder-url="/tasks/reorder" data-token="<%= authenticity_token %>">
       <%= for (t) in tasks { %>
         <li class="task<%= if (t.Completed) { %> task-completed<% } %>" data-task-id="<%= t.ID %>">
-          <button type="button" class="task-handle" data-task-handle aria-label="Mover tarea: <%= t.Title %>" title="Arrastra para reordenar (o usa ↑ y ↓)">
+          <button type="button" class="task-handle" data-task-handle aria-label="Mover tarea: <%= t.Title %>" title="Arrastra para reordenar (o usa ↑ y ↓ con el teclado)">
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" /><circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" /><circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" /></svg>
           </button>
           <form action="/tasks/<%= t.ID %>/toggle" method="POST" class="task-toggle" data-task-toggle>

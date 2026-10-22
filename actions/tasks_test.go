@@ -293,7 +293,11 @@ func (as *ActionSuite) Test_TasksIndex_RendersHandle() {
 
 	body := as.HTML("/").Get().Body.String()
 	as.Contains(body, "data-task-handle")
-	as.Contains(body, "data-reorder-url")
+	as.Contains(body, "data-reorder-url=\"/tasks/reorder\"")
+	as.Contains(body, "data-token")
+	as.Contains(body, "id=\"reorder-status\"")
+	as.Contains(body, "app.js?v=5")
+	as.NotContains(body, "draggable")
 }
 
 func (as *ActionSuite) Test_TasksCreate_AppendsAtEnd() {

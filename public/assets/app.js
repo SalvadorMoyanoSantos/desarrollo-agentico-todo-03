@@ -94,65 +94,142 @@ function saveOrder(list, previousOrder) {
   });
 }
 
-var dragState = null;
-
-// El <li> solo es arrastrable mientras se pulsa el asa, para no interferir con la selección de texto.
-document.addEventListener("pointerdown", function (event) {
-  var handle = event.target.closest("[data-task-handle]");
-  if (handle) {
-    handle.closest(".task").setAttribute("draggable", "true");
+// Anuncia la nueva posición de la tarea a los lectores de pantalla.
+function announceMove(list, task) {
+  var items = taskItems(list);
+  var status = document.getElementById("reorder-status");
+  if (status) {
+    status.textContent = "Tarea movida a la posición " + (items.indexOf(task) + 1) + " de " + items.length;
   }
-});
+}
 
-document.addEventListener("pointerup", function () {
-  document.querySelectorAll(".task[draggable='true']").forEach(function (task) {
-    if (!dragState) {
-      task.removeAttribute("draggable");
-    }
-  });
-});
+var drag = null;
+var AUTOSCROLL_EDGE = 60;
+var AUTOSCROLL_STEP = 12;
 
-document.addEventListener("dragstart", function (event) {
-  var task = event.target.closest && event.target.closest(".task[draggable='true']");
-  var list = task && task.closest("[data-task-list]");
-  if (!list) {
+// Coloca la tarea arrastrada según la posición vertical del puntero.
+function moveDraggedTask() {
+  if (!drag) {
     return;
   }
 
-  dragState = { list: list, task: task, previous: taskItems(list) };
-  task.classList.add("task-dragging");
-  event.dataTransfer.effectAllowed = "move";
-  event.dataTransfer.setData("text/plain", task.dataset.taskId);
-});
-
-document.addEventListener("dragover", function (event) {
-  if (!dragState || !dragState.list.contains(event.target)) {
+  // Con la captura del puntero event.target es siempre el asa, así que se localiza la fila por coordenadas.
+  var rect = drag.list.getBoundingClientRect();
+  var element = document.elementFromPoint(rect.left + 1, drag.y);
+  var over = element && element.closest(".task");
+  if (!over || over === drag.task || !drag.list.contains(over)) {
     return;
   }
 
-  event.preventDefault();
-  var over = event.target.closest(".task");
-  if (!over || over === dragState.task) {
+  var box = over.getBoundingClientRect();
+  var after = drag.y > box.top + box.height / 2;
+  var reference = after ? over.nextSibling : over;
+  if (reference !== drag.task) {
+    drag.list.insertBefore(drag.task, reference);
+  }
+}
+
+// Desplaza la ventana mientras el puntero está cerca de un borde.
+function autoScroll() {
+  if (!drag) {
     return;
   }
 
-  var rect = over.getBoundingClientRect();
-  var after = event.clientY > rect.top + rect.height / 2;
-  dragState.list.insertBefore(dragState.task, after ? over.nextSibling : over);
-});
+  if (drag.y < AUTOSCROLL_EDGE) {
+    window.scrollBy(0, -AUTOSCROLL_STEP);
+    moveDraggedTask();
+  } else if (drag.y > window.innerHeight - AUTOSCROLL_EDGE) {
+    window.scrollBy(0, AUTOSCROLL_STEP);
+    moveDraggedTask();
+  }
+  drag.frame = window.requestAnimationFrame(autoScroll);
+}
 
-document.addEventListener("dragend", function () {
-  if (!dragState) {
+// Termina el arrastre; con save=false vuelve al orden previo sin llamar al servidor.
+function finishDrag(save, pointerType) {
+  var state = drag;
+  if (!state) {
     return;
   }
+  drag = null;
 
-  var state = dragState;
-  dragState = null;
+  window.cancelAnimationFrame(state.frame);
   state.task.classList.remove("task-dragging");
-  state.task.removeAttribute("draggable");
+  state.list.classList.remove("task-list-dragging");
+  if (state.handle.hasPointerCapture && state.handle.hasPointerCapture(state.pointerId)) {
+    state.handle.releasePointerCapture(state.pointerId);
+  }
+
+  if (!save) {
+    restoreOrder(state.list, state.previous);
+    return;
+  }
 
   if (!sameOrder(state.previous, taskItems(state.list))) {
+    announceMove(state.list, state.task);
     saveOrder(state.list, state.previous);
+  }
+  if (pointerType !== "touch") {
+    state.handle.focus();
+  }
+}
+
+// El arrastre empieza en el asa y sirve para ratón, lápiz y táctil.
+document.addEventListener("pointerdown", function (event) {
+  var handle = event.target.closest && event.target.closest("[data-task-handle]");
+  var task = handle && handle.closest(".task");
+  var list = task && task.closest("[data-task-list]");
+  if (!list || drag || event.button !== 0 || !handle.setPointerCapture) {
+    return;
+  }
+
+  handle.setPointerCapture(event.pointerId);
+  drag = {
+    list: list,
+    task: task,
+    handle: handle,
+    pointerId: event.pointerId,
+    previous: taskItems(list),
+    y: event.clientY,
+    frame: 0,
+  };
+  task.classList.add("task-dragging");
+  list.classList.add("task-list-dragging");
+  drag.frame = window.requestAnimationFrame(autoScroll);
+});
+
+document.addEventListener("pointermove", function (event) {
+  if (!drag || event.pointerId !== drag.pointerId) {
+    return;
+  }
+
+  drag.y = event.clientY;
+  moveDraggedTask();
+});
+
+document.addEventListener("pointerup", function (event) {
+  if (drag && event.pointerId === drag.pointerId) {
+    finishDrag(true, event.pointerType);
+  }
+});
+
+document.addEventListener("pointercancel", function (event) {
+  if (drag && event.pointerId === drag.pointerId) {
+    finishDrag(false);
+  }
+});
+
+// Reubicar el <li> en el DOM libera la captura: se recupera mientras el arrastre siga activo.
+document.addEventListener("lostpointercapture", function (event) {
+  if (drag && event.pointerId === drag.pointerId && drag.handle.isConnected) {
+    drag.handle.setPointerCapture(event.pointerId);
+  }
+});
+
+// La pulsación larga en táctil abre el menú contextual sobre el asa.
+document.addEventListener("contextmenu", function (event) {
+  if (event.target.closest && event.target.closest("[data-task-handle]")) {
+    event.preventDefault();
   }
 });
 
@@ -177,10 +254,6 @@ document.addEventListener("keydown", function (event) {
   }
 
   handle.focus();
-  var items = taskItems(list);
-  var status = document.getElementById("reorder-status");
-  if (status) {
-    status.textContent = "Tarea movida a la posición " + (items.indexOf(task) + 1) + " de " + items.length;
-  }
+  announceMove(list, task);
   saveOrder(list, previous);
 });

@@ -182,6 +182,13 @@ h1 {
 
 .task-dragging {
   opacity: 0.5;
+  cursor: grabbing;
+}
+
+.task-list-dragging {
+  cursor: grabbing;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .completion-icon {
@@ -462,7 +469,11 @@ input:focus-visible {
   }
 
   .task {
-    grid-template-columns: 24px 36px minmax(0, 1fr) auto;
+    grid-template-columns: 32px 36px minmax(0, 1fr) auto;
+  }
+
+  .task-handle {
+    width: 32px;
   }
 
   .task-toggle-button,
