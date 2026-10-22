@@ -114,3 +114,49 @@ func (ms *ModelSuite) Test_Tasks_Report_Counts() {
 	ms.Equal(33, r.Percent)
 	ms.Equal([]DayCount{{"2026-10-02", 1}, {"2026-10-01", 2}}, r.ByDay)
 }
+
+func (ms *ModelSuite) Test_Task_WorkMinutes_Persists() {
+	task := &Task{Title: "Con tiempo", WorkMinutes: 90}
+	verrs, err := ms.DB.ValidateAndCreate(task)
+	ms.NoError(err)
+	ms.False(verrs.HasAny())
+
+	reloaded := &Task{}
+	ms.NoError(ms.DB.Find(reloaded, task.ID))
+	ms.Equal(90, reloaded.WorkMinutes)
+}
+
+func (ms *ModelSuite) Test_Task_WorkMinutes_Range() {
+	for _, m := range []int{0, WorkMinutesMax} {
+		verrs, err := (&Task{Title: "a", WorkMinutes: m}).Validate(ms.DB)
+		ms.NoError(err)
+		ms.False(verrs.HasAny())
+	}
+	for _, m := range []int{-1, WorkMinutesMax + 1} {
+		verrs, err := (&Task{Title: "a", WorkMinutes: m}).Validate(ms.DB)
+		ms.NoError(err)
+		ms.NotEmpty(verrs.Get("work_minutes"))
+	}
+}
+
+func (ms *ModelSuite) Test_FormatMinutes() {
+	ms.Equal("—", FormatMinutes(0))
+	ms.Equal("45 min", FormatMinutes(45))
+	ms.Equal("1 h", FormatMinutes(60))
+	ms.Equal("1 h 30 min", FormatMinutes(90))
+	ms.Equal("2 h", FormatMinutes(120))
+}
+
+func (ms *ModelSuite) Test_Tasks_Report_TotalTime() {
+	r := Tasks{{WorkMinutes: 90}, {WorkMinutes: 45}, {}}.Report()
+	ms.Equal(135, r.TotalMinutes)
+	ms.Equal("2 h 15 min", r.TotalTime)
+	ms.Equal("—", Tasks{}.Report().TotalTime)
+}
+
+func (ms *ModelSuite) Test_ParseWorkMinutes() {
+	ms.Equal(0, ParseWorkMinutes(""))
+	ms.Equal(0, ParseWorkMinutes("  "))
+	ms.Equal(90, ParseWorkMinutes(" 90 "))
+	ms.Equal(-1, ParseWorkMinutes("abc"))
+}

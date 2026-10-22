@@ -52,6 +52,14 @@ func TasksCreate(c buffalo.Context) error {
 	}
 	task.Title = strings.TrimSpace(task.Title)
 
+	minutes := struct {
+		WorkMinutes string `form:"work_minutes" json:"work_minutes"`
+	}{}
+	if err := c.Bind(&minutes); err != nil {
+		return err
+	}
+	task.WorkMinutes = models.ParseWorkMinutes(minutes.WorkMinutes)
+
 	var last int
 	if err := tx.RawQuery("SELECT COALESCE(MAX(position), 0) FROM tasks").First(&last); err != nil {
 		return err
@@ -93,7 +101,7 @@ func TasksEdit(c buffalo.Context) error {
 	return c.Render(http.StatusOK, r.HTML("tasks/edit.plush.html"))
 }
 
-// TasksUpdate actualiza solo el título, conservando los demás datos de la tarea.
+// TasksUpdate actualiza el título y el tiempo de trabajo, conservando los demás datos de la tarea.
 func TasksUpdate(c buffalo.Context) error {
 	tx := c.Value("tx").(*pop.Connection)
 
@@ -103,12 +111,14 @@ func TasksUpdate(c buffalo.Context) error {
 	}
 
 	input := struct {
-		Title string `form:"title" json:"title"`
+		Title       string `form:"title" json:"title"`
+		WorkMinutes string `form:"work_minutes" json:"work_minutes"`
 	}{}
 	if err := c.Bind(&input); err != nil {
 		return err
 	}
 	task.Title = strings.TrimSpace(input.Title)
+	task.WorkMinutes = models.ParseWorkMinutes(input.WorkMinutes)
 
 	verrs, err := tx.ValidateAndUpdate(task)
 	if err != nil {

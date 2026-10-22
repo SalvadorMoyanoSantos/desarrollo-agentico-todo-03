@@ -33,7 +33,7 @@
               <span class="toggle-label sr-only"><%= if (t.Completed) { %>Reabrir<% } else { %>Completar<% } %></span>
             </button>
           </form>
-          <span class="task-title"><%= t.Title %></span>
+          <span class="task-title"><%= t.Title %><%= if (t.WorkMinutes > 0) { %> <small class="task-time" title="Tiempo de trabajo"><%= t.WorkTime() %></small><% } %></span>
           <%= if (t.Completed) { %>
             <span class="task-status">Completada</span>
           <% } %>
@@ -72,13 +72,27 @@
       placeholder="Añadir una tarea…"
       maxlength="200"
       autocomplete="off"
-      <%= if (errors.HasAny()) { %>autofocus aria-invalid="true" aria-describedby="title-error"<% } %>
+      <%= if (errors.HasAny()) { %>autofocus<% } %> <%= if (len(errors.Get("title")) > 0) { %>aria-invalid="true" aria-describedby="title-error"<% } %>
+    >
+    <input
+      type="number"
+      name="work_minutes"
+      class="minutes-input"
+      min="0"
+      max="99999"
+      step="1"
+      inputmode="numeric"
+      placeholder="Min"
+      aria-label="Tiempo de trabajo en minutos"
+      <%= if (task.WorkMinutes > 0) { %>value="<%= task.WorkMinutes %>"<% } %>
+      <%= if (len(errors.Get("work_minutes")) > 0) { %>aria-invalid="true" aria-describedby="title-error"<% } %>
     >
     <button type="submit" class="button button-primary">Añadir</button>
   </div>
   <%= if (errors.HasAny()) { %>
     <p id="title-error" class="field-error" role="alert">
       <%= for (msg) in errors.Get("title") { %><%= msg %><% } %>
+      <%= for (msg) in errors.Get("work_minutes") { %><%= msg %><% } %>
     </p>
   <% } %>
 </form>

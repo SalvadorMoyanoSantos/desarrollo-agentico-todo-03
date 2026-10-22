@@ -394,3 +394,78 @@ func (as *ActionSuite) Test_TasksReport_Metrics() {
 	as.Contains(body, "<dd>33 %</dd>")
 	as.Contains(body, `href="/report"`)
 }
+
+func (as *ActionSuite) Test_TasksCreate_WithWorkMinutes() {
+	res := as.HTML("/tasks").Post(url.Values{"title": {"Con tiempo"}, "work_minutes": {"90"}})
+	as.Equal(303, res.Code)
+
+	task := &models.Task{}
+	as.NoError(as.DB.First(task))
+	as.Equal(90, task.WorkMinutes)
+}
+
+func (as *ActionSuite) Test_TasksCreate_EmptyWorkMinutes() {
+	res := as.HTML("/tasks").Post(url.Values{"title": {"Sin tiempo"}, "work_minutes": {""}})
+	as.Equal(303, res.Code)
+
+	task := &models.Task{}
+	as.NoError(as.DB.First(task))
+	as.Equal(0, task.WorkMinutes)
+}
+
+func (as *ActionSuite) Test_TasksCreate_NegativeWorkMinutes() {
+	res := as.HTML("/tasks").Post(url.Values{"title": {"Negativo"}, "work_minutes": {"-5"}})
+	as.Equal(422, res.Code)
+	as.Contains(res.Body.String(), "El tiempo de trabajo debe estar entre 0 y 99999 minutos.")
+
+	count, err := as.DB.Count(&models.Task{})
+	as.NoError(err)
+	as.Equal(0, count)
+}
+
+func (as *ActionSuite) Test_TasksEdit_PrefillsWorkMinutes() {
+	task := as.taskForEditing(false)
+	task.WorkMinutes = 75
+	as.NoError(as.DB.Update(task))
+
+	res := as.HTML("/tasks/%s/edit", task.ID).Get()
+	as.Equal(200, res.Code)
+	as.Contains(res.Body.String(), `value="75"`)
+	as.Contains(res.Body.String(), "Tiempo de trabajo (minutos)")
+}
+
+func (as *ActionSuite) Test_TasksUpdate_PersistsWorkMinutes() {
+	task := as.taskForEditing(true)
+	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {"Igual"}, "work_minutes": {"120"}})
+	as.Equal(303, res.Code)
+	as.NoError(as.DB.Reload(task))
+	as.Equal(120, task.WorkMinutes)
+	as.True(task.Completed)
+}
+
+func (as *ActionSuite) Test_TasksUpdate_InvalidWorkMinutes() {
+	task := as.taskForEditing(false)
+	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {"Igual"}, "work_minutes": {"100000"}})
+	as.Equal(422, res.Code)
+	as.Contains(res.Body.String(), "El tiempo de trabajo debe estar entre 0 y 99999 minutos.")
+	as.NoError(as.DB.Reload(task))
+	as.Equal(0, task.WorkMinutes)
+}
+
+func (as *ActionSuite) Test_TasksIndex_ShowsWorkTime() {
+	as.LoadFixture("tres tareas")
+	res := as.HTML("/").Get()
+	as.Equal(200, res.Code)
+	as.Contains(res.Body.String(), "1 h 30 min")
+}
+
+func (as *ActionSuite) Test_TasksReport_ShowsWorkTime() {
+	as.LoadFixture("tres tareas")
+	res := as.HTML("/report").Get()
+	as.Equal(200, res.Code)
+	body := res.Body.String()
+	as.Contains(body, "Tiempo total")
+	as.Contains(body, "<dd>2 h 15 min</dd>")
+	as.Contains(body, `<th scope="col">Tiempo</th>`)
+	as.Contains(body, "<td>1 h 30 min</td>")
+}
