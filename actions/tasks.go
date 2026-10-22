@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gobuffalo/validate/v3"
+	"github.com/gofrs/uuid"
 )
 
 // TasksIndex muestra la lista de tareas y el formulario de creación.
@@ -16,7 +18,7 @@ func TasksIndex(c buffalo.Context) error {
 	tx := c.Value("tx").(*pop.Connection)
 
 	tasks := models.Tasks{}
-	if err := tx.Order("created_at asc, id asc").All(&tasks); err != nil {
+	if err := tx.Order(models.TaskOrder).All(&tasks); err != nil {
 		return err
 	}
 
@@ -36,6 +38,12 @@ func TasksCreate(c buffalo.Context) error {
 	}
 	task.Title = strings.TrimSpace(task.Title)
 
+	var last int
+	if err := tx.RawQuery("SELECT COALESCE(MAX(position), 0) FROM tasks").First(&last); err != nil {
+		return err
+	}
+	task.Position = last + 1
+
 	verrs, err := tx.ValidateAndCreate(task)
 	if err != nil {
 		return err
@@ -43,7 +51,7 @@ func TasksCreate(c buffalo.Context) error {
 
 	if verrs.HasAny() {
 		tasks := models.Tasks{}
-		if err := tx.Order("created_at asc, id asc").All(&tasks); err != nil {
+		if err := tx.Order(models.TaskOrder).All(&tasks); err != nil {
 			return err
 		}
 
@@ -117,6 +125,58 @@ func TasksToggle(c buffalo.Context) error {
 	}
 
 	return c.Redirect(http.StatusSeeOther, "/")
+}
+
+// TasksReorder reasigna la posición de todas las tareas según la lista de IDs recibida.
+func TasksReorder(c buffalo.Context) error {
+	tx := c.Value("tx").(*pop.Connection)
+
+	input := struct {
+		IDs []string `form:"ids" json:"ids"`
+	}{}
+	if err := c.Bind(&input); err != nil {
+		return err
+	}
+
+	tasks := models.Tasks{}
+	if err := tx.Order(models.TaskOrder).All(&tasks); err != nil {
+		return err
+	}
+
+	if len(input.IDs) != len(tasks) {
+		return c.Error(http.StatusUnprocessableEntity, errors.New("la lista de tareas no coincide"))
+	}
+
+	byID := make(map[uuid.UUID]*models.Task, len(tasks))
+	for i := range tasks {
+		byID[tasks[i].ID] = &tasks[i]
+	}
+
+	ordered := make([]*models.Task, 0, len(input.IDs))
+	for _, raw := range input.IDs {
+		id, err := uuid.FromString(raw)
+		if err != nil {
+			return c.Error(http.StatusUnprocessableEntity, err)
+		}
+		task, ok := byID[id]
+		if !ok {
+			return c.Error(http.StatusUnprocessableEntity, errors.New("tarea desconocida o repetida"))
+		}
+		delete(byID, id)
+		ordered = append(ordered, task)
+	}
+
+	for i, task := range ordered {
+		if task.Position == i+1 {
+			continue
+		}
+		task.Position = i + 1
+		if err := tx.Update(task); err != nil {
+			return err
+		}
+	}
+
+	return c.Render(http.StatusNoContent, nil)
 }
 
 // TasksDestroy elimina una tarea.
