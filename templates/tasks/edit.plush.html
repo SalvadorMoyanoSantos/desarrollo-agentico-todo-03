@@ -1,5 +1,5 @@
 <header class="page-header">
-  <a href="/" class="back-link"><span aria-hidden="true">←</span> Volver a la lista</a>
+  <a href="/" class="tap-target text-sm back-link"><span aria-hidden="true">←</span> Volver a la lista</a>
   <h1>Editar tarea</h1>
 </header>
 
@@ -17,14 +17,14 @@
     autofocus
     <%= if (errors.HasAny()) { %>aria-invalid="true" aria-describedby="title-error"<% } else { %>aria-describedby="title-help"<% } %>
   >
-  <p id="title-help" class="field-hint">Hasta 200 caracteres. Los demás datos de la tarea no cambian.</p>
+  <p id="title-help" class="field-hint text-xs">Hasta 200 caracteres. Los demás datos de la tarea no cambian.</p>
   <%= if (errors.HasAny()) { %>
-    <p id="title-error" class="field-error" role="alert">
+    <p id="title-error" class="notice field-error" role="alert">
       <%= for (msg) in errors.Get("title") { %><%= msg %><% } %>
     </p>
   <% } %>
   <div class="edit-task-actions">
-    <a href="/" class="button">Cancelar</a>
-    <button type="submit" class="button button-primary">Guardar cambios</button>
+    <a href="/" class="tap-target text-sm button">Cancelar</a>
+    <button type="submit" class="tap-target text-sm button button-primary">Guardar cambios</button>
   </div>
 </form>
