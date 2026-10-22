@@ -8,7 +8,7 @@ function renderTaskState(task, completed) {
   var label = completed ? "Reabrir" : "Completar";
   button.querySelector(".toggle-label").textContent = label;
   button.setAttribute("aria-pressed", String(completed));
-  button.setAttribute("aria-label", label + " tarea: " + task.querySelector(".task-title").textContent);
+  button.setAttribute("aria-label", label + " tarea: " + task.querySelector(".task-title-text").textContent);
   button.setAttribute("title", label + " tarea");
 
   if (completed && !status) {

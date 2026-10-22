@@ -296,7 +296,7 @@ func (as *ActionSuite) Test_TasksIndex_RendersHandle() {
 	as.Contains(body, "data-reorder-url=\"/tasks/reorder\"")
 	as.Contains(body, "data-token")
 	as.Contains(body, "id=\"reorder-status\"")
-	as.Contains(body, "app.js?v=5")
+	as.Contains(body, "app.js?v=6")
 	as.NotContains(body, "draggable")
 }
 
@@ -468,4 +468,17 @@ func (as *ActionSuite) Test_TasksReport_ShowsWorkTime() {
 	as.Contains(body, "<dd>2 h 15 min</dd>")
 	as.Contains(body, `<th scope="col">Tiempo</th>`)
 	as.Contains(body, "<td>1 h 30 min</td>")
+}
+
+func (as *ActionSuite) Test_TasksIndex_TitleTextExcludesTime() {
+	task := &models.Task{Title: "Con tiempo", WorkMinutes: 90}
+	verrs, err := as.DB.ValidateAndCreate(task)
+	as.NoError(err)
+	as.False(verrs.HasAny())
+
+	res := as.HTML("/").Get()
+	as.Equal(200, res.Code)
+	body := res.Body.String()
+	as.Contains(body, `<span class="task-title-text">Con tiempo</span>`)
+	as.Contains(body, "1 h 30 min")
 }

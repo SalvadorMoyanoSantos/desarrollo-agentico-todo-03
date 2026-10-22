@@ -33,7 +33,7 @@
               <span class="toggle-label sr-only"><%= if (t.Completed) { %>Reabrir<% } else { %>Completar<% } %></span>
             </button>
           </form>
-          <span class="task-title"><%= t.Title %><%= if (t.WorkMinutes > 0) { %> <small class="task-time" title="Tiempo de trabajo"><%= t.WorkTime() %></small><% } %></span>
+          <span class="task-title"><span class="task-title-text"><%= t.Title %></span><%= if (t.WorkMinutes > 0) { %> <small class="task-time" title="Tiempo de trabajo"><%= t.WorkTime() %></small><% } %></span>
           <%= if (t.Completed) { %>
             <span class="task-status">Completada</span>
           <% } %>
