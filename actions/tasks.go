@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"todo/models"
 
@@ -12,6 +13,33 @@ import (
 	"github.com/gobuffalo/validate/v3"
 	"github.com/gofrs/uuid"
 )
+
+const msgDueDateInvalid = "La fecha límite no es válida."
+
+// dueDateField lee la fecha límite enviada en el formulario. present indica si el campo
+// llegó: si no llegó, la fecha de la tarea no se toca. Un valor vacío significa "sin fecha".
+func dueDateField(c buffalo.Context) (raw string, present bool, err error) {
+	if err := c.Request().ParseForm(); err != nil {
+		return "", false, err
+	}
+	values, present := c.Request().Form["due_date"]
+	if !present || len(values) == 0 {
+		return "", false, nil
+	}
+	return strings.TrimSpace(values[0]), true, nil
+}
+
+// parseDueDate convierte el valor del formulario en fecha límite (YYYY-MM-DD). Vacío = nil.
+func parseDueDate(raw string) (*time.Time, error) {
+	if raw == "" {
+		return nil, nil
+	}
+	date, err := time.Parse(models.DueDateLayout, raw)
+	if err != nil {
+		return nil, err
+	}
+	return &date, nil
+}
 
 // TasksIndex muestra la lista de tareas y el formulario de creación.
 func TasksIndex(c buffalo.Context) error {
@@ -38,15 +66,25 @@ func TasksCreate(c buffalo.Context) error {
 	}
 	task.Title = strings.TrimSpace(task.Title)
 
+	raw, _, err := dueDateField(c)
+	if err != nil {
+		return err
+	}
+	dueDate, dueErr := parseDueDate(raw)
+	task.DueDate = dueDate
+
 	var last int
 	if err := tx.RawQuery("SELECT COALESCE(MAX(position), 0) FROM tasks").First(&last); err != nil {
 		return err
 	}
 	task.Position = last + 1
 
-	verrs, err := tx.ValidateAndCreate(task)
+	verrs, err := task.Validate(tx)
 	if err != nil {
 		return err
+	}
+	if dueErr != nil {
+		verrs.Add("due_date", msgDueDateInvalid)
 	}
 
 	if verrs.HasAny() {
@@ -59,6 +97,10 @@ func TasksCreate(c buffalo.Context) error {
 		c.Set("task", task)
 		c.Set("errors", verrs)
 		return c.Render(http.StatusUnprocessableEntity, r.HTML("tasks/index.plush.html"))
+	}
+
+	if err := tx.Create(task); err != nil {
+		return err
 	}
 
 	c.Flash().Add("success", "Tarea creada.")
@@ -79,7 +121,8 @@ func TasksEdit(c buffalo.Context) error {
 	return c.Render(http.StatusOK, r.HTML("tasks/edit.plush.html"))
 }
 
-// TasksUpdate actualiza solo el título, conservando los demás datos de la tarea.
+// TasksUpdate actualiza el título y la fecha límite si el formulario la envía,
+// conservando los demás datos de la tarea.
 func TasksUpdate(c buffalo.Context) error {
 	tx := c.Value("tx").(*pop.Connection)
 
@@ -96,14 +139,30 @@ func TasksUpdate(c buffalo.Context) error {
 	}
 	task.Title = strings.TrimSpace(input.Title)
 
-	verrs, err := tx.ValidateAndUpdate(task)
+	raw, hasDueDate, err := dueDateField(c)
 	if err != nil {
 		return err
+	}
+	var dueErr error
+	if hasDueDate {
+		task.DueDate, dueErr = parseDueDate(raw)
+	}
+
+	verrs, err := task.Validate(tx)
+	if err != nil {
+		return err
+	}
+	if dueErr != nil {
+		verrs.Add("due_date", msgDueDateInvalid)
 	}
 	if verrs.HasAny() {
 		c.Set("task", task)
 		c.Set("errors", verrs)
 		return c.Render(http.StatusUnprocessableEntity, r.HTML("tasks/edit.plush.html"))
+	}
+
+	if err := tx.Update(task); err != nil {
+		return err
 	}
 
 	c.Flash().Add("success", "Tarea actualizada.")

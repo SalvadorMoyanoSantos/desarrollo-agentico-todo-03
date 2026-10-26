@@ -23,6 +23,21 @@
       <%= for (msg) in errors.Get("title") { %><%= msg %><% } %>
     </p>
   <% } %>
+  <label for="task-due-date">Fecha límite</label>
+  <input
+    id="task-due-date"
+    type="date"
+    name="due_date"
+    value="<%= if (task.DueDate != nil) { %><%= task.DueDate.Format("2006-01-02") %><% } %>"
+    aria-describedby="due-date-help"
+    <%= if (len(errors.Get("due_date")) > 0) { %>aria-invalid="true"<% } %>
+  >
+  <p id="due-date-help" class="field-hint">Opcional. Borra la fecha para quitarla.</p>
+  <%= if (len(errors.Get("due_date")) > 0) { %>
+    <p id="due-date-error" class="field-error" role="alert">
+      <%= for (msg) in errors.Get("due_date") { %><%= msg %><% } %>
+    </p>
+  <% } %>
   <div class="edit-task-actions">
     <a href="/" class="button">Cancelar</a>
     <button type="submit" class="button button-primary">Guardar cambios</button>

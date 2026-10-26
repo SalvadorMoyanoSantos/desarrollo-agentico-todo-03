@@ -16,14 +16,18 @@ const TitleMaxLength = 200
 // TaskOrder es el orden en que se listan las tareas.
 const TaskOrder = "position asc, created_at asc, id asc"
 
+// DueDateLayout es el formato en que se recibe y se edita la fecha límite (solo día).
+const DueDateLayout = "2006-01-02"
+
 // Task representa una tarea de la lista.
 type Task struct {
-	ID        uuid.UUID `json:"id" db:"id" form:"-"`
-	Title     string    `json:"title" db:"title" form:"title"`
-	Completed bool      `json:"completed" db:"completed" form:"-"`
-	Position  int       `json:"position" db:"position" form:"-"`
-	CreatedAt time.Time `json:"created_at" db:"created_at" form:"-"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at" form:"-"`
+	ID        uuid.UUID  `json:"id" db:"id" form:"-"`
+	Title     string     `json:"title" db:"title" form:"title"`
+	Completed bool       `json:"completed" db:"completed" form:"-"`
+	Position  int        `json:"position" db:"position" form:"-"`
+	DueDate   *time.Time `json:"due_date" db:"due_date" form:"-"`
+	CreatedAt time.Time  `json:"created_at" db:"created_at" form:"-"`
+	UpdatedAt time.Time  `json:"updated_at" db:"updated_at" form:"-"`
 }
 
 // Tasks es una colección de Task.
