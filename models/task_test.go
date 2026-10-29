@@ -139,6 +139,28 @@ func (ms *ModelSuite) Test_Task_WorkMinutes_Range() {
 	}
 }
 
+func (ms *ModelSuite) Test_Task_Assignee_Optional() {
+	verrs, err := (&Task{Title: "a"}).Validate(ms.DB)
+	ms.NoError(err)
+	ms.False(verrs.HasAny())
+}
+
+func (ms *ModelSuite) Test_Task_Assignee_MaxLength() {
+	verrs, err := (&Task{Title: "a", Assignee: strings.Repeat("a", AssigneeMaxLength)}).Validate(ms.DB)
+	ms.NoError(err)
+	ms.False(verrs.HasAny())
+
+	verrs, err = (&Task{Title: "a", Assignee: strings.Repeat("a", AssigneeMaxLength+1)}).Validate(ms.DB)
+	ms.NoError(err)
+	ms.True(verrs.HasAny())
+	ms.Contains(verrs.Get("assignee"), "El nombre del usuario asignado no puede superar los 50 caracteres.")
+}
+
+func (ms *ModelSuite) Test_Task_AssigneeName() {
+	ms.Equal("—", Task{}.AssigneeName())
+	ms.Equal("Ana", Task{Assignee: "Ana"}.AssigneeName())
+}
+
 func (ms *ModelSuite) Test_FormatMinutes() {
 	ms.Equal("—", FormatMinutes(0))
 	ms.Equal("45 min", FormatMinutes(45))

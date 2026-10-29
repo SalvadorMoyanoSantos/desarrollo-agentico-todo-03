@@ -297,11 +297,17 @@ input[type="number"] {
   flex: 1;
 }
 
+.new-task-row input.assignee-input {
+  flex: 0 0 9rem;
+  width: 9rem;
+}
+
 .new-task-row input.minutes-input {
   flex: 0 0 5.5rem;
   width: 5.5rem;
 }
 
+.task-assignee,
 .task-time {
   margin-left: 0.4rem;
   color: var(--color-muted);
@@ -529,6 +535,10 @@ input:focus-visible {
   }
 
   .new-task-row input {
+    flex-basis: calc(100% - 44px);
+  }
+
+  .new-task-row input.assignee-input {
     flex-basis: calc(100% - 44px);
   }
 

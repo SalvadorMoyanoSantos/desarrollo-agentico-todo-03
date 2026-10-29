@@ -453,6 +453,71 @@ func (as *ActionSuite) Test_TasksUpdate_InvalidWorkMinutes() {
 	as.Equal(0, task.WorkMinutes)
 }
 
+func (as *ActionSuite) Test_TasksCreate_WithAssignee() {
+	res := as.HTML("/tasks").Post(url.Values{"title": {"Con asignado"}, "assignee": {"  Ana  "}})
+	as.Equal(303, res.Code)
+
+	task := &models.Task{}
+	as.NoError(as.DB.First(task))
+	as.Equal("Ana", task.Assignee)
+}
+
+func (as *ActionSuite) Test_TasksCreate_EmptyAssignee() {
+	res := as.HTML("/tasks").Post(url.Values{"title": {"Sin asignado"}, "assignee": {""}})
+	as.Equal(303, res.Code)
+
+	task := &models.Task{}
+	as.NoError(as.DB.First(task))
+	as.Equal("", task.Assignee)
+}
+
+func (as *ActionSuite) Test_TasksCreate_AssigneeTooLong_Invalid() {
+	res := as.HTML("/tasks").Post(url.Values{"title": {"Largo"}, "assignee": {strings.Repeat("a", models.AssigneeMaxLength+1)}})
+	as.Equal(422, res.Code)
+	as.Contains(res.Body.String(), "El nombre del usuario asignado no puede superar los 50 caracteres.")
+
+	count, err := as.DB.Count(&models.Task{})
+	as.NoError(err)
+	as.Equal(0, count)
+}
+
+func (as *ActionSuite) Test_TasksUpdate_Assignee() {
+	task := as.taskForEditing(true)
+	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {"Igual"}, "assignee": {"  Luis  "}})
+	as.Equal(303, res.Code)
+	as.NoError(as.DB.Reload(task))
+	as.Equal("Luis", task.Assignee)
+	as.True(task.Completed)
+}
+
+func (as *ActionSuite) Test_TasksEdit_PrefillsAssignee() {
+	task := as.taskForEditing(false)
+	task.Assignee = "Marta"
+	as.NoError(as.DB.Update(task))
+
+	res := as.HTML("/tasks/%s/edit", task.ID).Get()
+	as.Equal(200, res.Code)
+	as.Contains(res.Body.String(), `value="Marta"`)
+	as.Contains(res.Body.String(), "Asignado a")
+}
+
+func (as *ActionSuite) Test_TasksIndex_ShowsAssignee() {
+	as.LoadFixture("tres tareas")
+	res := as.HTML("/").Get()
+	as.Equal(200, res.Code)
+	as.Contains(res.Body.String(), `class="task-assignee"`)
+	as.Contains(res.Body.String(), "Ana")
+}
+
+func (as *ActionSuite) Test_TasksReport_ShowsAssignee() {
+	as.LoadFixture("tres tareas")
+	res := as.HTML("/report").Get()
+	as.Equal(200, res.Code)
+	as.Contains(res.Body.String(), "Asignado a")
+	as.Contains(res.Body.String(), "<td>Ana</td>")
+	as.Contains(res.Body.String(), "<td>—</td>")
+}
+
 func (as *ActionSuite) Test_TasksIndex_ShowsWorkTime() {
 	as.LoadFixture("tres tareas")
 	res := as.HTML("/").Get()

@@ -23,6 +23,21 @@
       <%= for (msg) in errors.Get("title") { %><%= msg %><% } %>
     </p>
   <% } %>
+  <label for="task-assignee" class="field-label-spaced">Asignado a</label>
+  <input
+    id="task-assignee"
+    type="text"
+    name="assignee"
+    value="<%= task.Assignee %>"
+    maxlength="50"
+    autocomplete="off"
+    <%= if (len(errors.Get("assignee")) > 0) { %>aria-invalid="true" aria-describedby="assignee-error"<% } %>
+  >
+  <%= if (len(errors.Get("assignee")) > 0) { %>
+    <p id="assignee-error" class="field-error" role="alert">
+      <%= for (msg) in errors.Get("assignee") { %><%= msg %><% } %>
+    </p>
+  <% } %>
   <label for="task-minutes" class="field-label-spaced">Tiempo de trabajo (minutos)</label>
   <input
     id="task-minutes"

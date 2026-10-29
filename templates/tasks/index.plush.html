@@ -33,7 +33,7 @@
               <span class="toggle-label sr-only"><%= if (t.Completed) { %>Reabrir<% } else { %>Completar<% } %></span>
             </button>
           </form>
-          <span class="task-title"><span class="task-title-text"><%= t.Title %></span><%= if (t.WorkMinutes > 0) { %> <small class="task-time" title="Tiempo de trabajo"><%= t.WorkTime() %></small><% } %><time class="task-date" datetime="<%= t.CreatedAt.UTC().Format("2006-01-02T15:04:05Z") %>" title="Fecha de creación"><%= t.CreatedAt.UTC().Format("02/01/2006") %></time></span>
+          <span class="task-title"><span class="task-title-text"><%= t.Title %></span><%= if (t.Assignee != "") { %> <small class="task-assignee" title="Asignado a"><%= t.Assignee %></small><% } %><%= if (t.WorkMinutes > 0) { %> <small class="task-time" title="Tiempo de trabajo"><%= t.WorkTime() %></small><% } %><time class="task-date" datetime="<%= t.CreatedAt.UTC().Format("2006-01-02T15:04:05Z") %>" title="Fecha de creación"><%= t.CreatedAt.UTC().Format("02/01/2006") %></time></span>
           <%= if (t.Completed) { %>
             <span class="task-status">Completada</span>
           <% } %>
@@ -75,6 +75,17 @@
       <%= if (errors.HasAny()) { %>autofocus<% } %> <%= if (len(errors.Get("title")) > 0) { %>aria-invalid="true" aria-describedby="title-error"<% } %>
     >
     <input
+      type="text"
+      name="assignee"
+      class="assignee-input"
+      value="<%= task.Assignee %>"
+      placeholder="Asignado a"
+      maxlength="50"
+      autocomplete="off"
+      aria-label="Asignado a"
+      <%= if (len(errors.Get("assignee")) > 0) { %>aria-invalid="true" aria-describedby="title-error"<% } %>
+    >
+    <input
       type="number"
       name="work_minutes"
       class="minutes-input"
@@ -92,6 +103,7 @@
   <%= if (errors.HasAny()) { %>
     <p id="title-error" class="field-error" role="alert">
       <%= for (msg) in errors.Get("title") { %><%= msg %><% } %>
+      <%= for (msg) in errors.Get("assignee") { %><%= msg %><% } %>
       <%= for (msg) in errors.Get("work_minutes") { %><%= msg %><% } %>
     </p>
   <% } %>

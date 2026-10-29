@@ -32,12 +32,13 @@
   <section aria-labelledby="all-heading">
     <h2 id="all-heading">Listado de tareas</h2>
     <table class="report-table">
-      <thead><tr><th scope="col">Tarea</th><th scope="col">Estado</th><th scope="col">Tiempo</th><th scope="col">Creada</th></tr></thead>
+      <thead><tr><th scope="col">Tarea</th><th scope="col">Estado</th><th scope="col">Asignado a</th><th scope="col">Tiempo</th><th scope="col">Creada</th></tr></thead>
       <tbody>
         <%= for (t) in tasks { %>
           <tr>
             <td><%= t.Title %></td>
             <td><%= if (t.Completed) { %>Completada<% } else { %>Pendiente<% } %></td>
+            <td><%= t.AssigneeName() %></td>
             <td><%= t.WorkTime() %></td>
             <td><%= t.CreatedAt.Format("02/01/2006") %></td>
           </tr>

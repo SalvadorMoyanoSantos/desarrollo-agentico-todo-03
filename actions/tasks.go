@@ -51,6 +51,7 @@ func TasksCreate(c buffalo.Context) error {
 		return err
 	}
 	task.Title = strings.TrimSpace(task.Title)
+	task.Assignee = strings.TrimSpace(task.Assignee)
 
 	minutes := struct {
 		WorkMinutes string `form:"work_minutes" json:"work_minutes"`
@@ -101,7 +102,7 @@ func TasksEdit(c buffalo.Context) error {
 	return c.Render(http.StatusOK, r.HTML("tasks/edit.plush.html"))
 }
 
-// TasksUpdate actualiza el título y el tiempo de trabajo, conservando los demás datos de la tarea.
+// TasksUpdate actualiza el título, el tiempo de trabajo y el asignado, conservando los demás datos de la tarea.
 func TasksUpdate(c buffalo.Context) error {
 	tx := c.Value("tx").(*pop.Connection)
 
@@ -112,12 +113,14 @@ func TasksUpdate(c buffalo.Context) error {
 
 	input := struct {
 		Title       string `form:"title" json:"title"`
+		Assignee    string `form:"assignee" json:"assignee"`
 		WorkMinutes string `form:"work_minutes" json:"work_minutes"`
 	}{}
 	if err := c.Bind(&input); err != nil {
 		return err
 	}
 	task.Title = strings.TrimSpace(input.Title)
+	task.Assignee = strings.TrimSpace(input.Assignee)
 	task.WorkMinutes = models.ParseWorkMinutes(input.WorkMinutes)
 
 	verrs, err := tx.ValidateAndUpdate(task)

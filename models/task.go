@@ -15,6 +15,9 @@ import (
 // TitleMaxLength es el número máximo de caracteres permitido en el título.
 const TitleMaxLength = 200
 
+// AssigneeMaxLength es el número máximo de caracteres permitido en el usuario asignado.
+const AssigneeMaxLength = 50
+
 // WorkMinutesMax es el máximo de minutos de trabajo permitido por tarea.
 const WorkMinutesMax = 99999
 
@@ -23,10 +26,12 @@ const TaskOrder = "position asc, created_at asc, id asc"
 
 // Task representa una tarea de la lista.
 type Task struct {
-	ID        uuid.UUID `json:"id" db:"id" form:"-"`
-	Title     string    `json:"title" db:"title" form:"title"`
-	Completed bool      `json:"completed" db:"completed" form:"-"`
-	Position  int       `json:"position" db:"position" form:"-"`
+	ID    uuid.UUID `json:"id" db:"id" form:"-"`
+	Title string    `json:"title" db:"title" form:"title"`
+	// Assignee es el usuario al que se asigna la tarea; es opcional y puede estar vacío.
+	Assignee  string `json:"assignee" db:"assignee" form:"assignee"`
+	Completed bool   `json:"completed" db:"completed" form:"-"`
+	Position  int    `json:"position" db:"position" form:"-"`
 	// WorkMinutes es el tiempo de trabajo dedicado a la tarea, en minutos.
 	WorkMinutes int       `json:"work_minutes" db:"work_minutes" form:"-"`
 	CreatedAt   time.Time `json:"created_at" db:"created_at" form:"-"`
@@ -49,6 +54,10 @@ func (t *Task) Validate(tx *pop.Connection) (*validate.Errors, error) {
 
 	if t.WorkMinutes < 0 || t.WorkMinutes > WorkMinutesMax {
 		verrs.Add("work_minutes", fmt.Sprintf("El tiempo de trabajo debe estar entre 0 y %d minutos.", WorkMinutesMax))
+	}
+
+	if len([]rune(strings.TrimSpace(t.Assignee))) > AssigneeMaxLength {
+		verrs.Add("assignee", fmt.Sprintf("El nombre del usuario asignado no puede superar los %d caracteres.", AssigneeMaxLength))
 	}
 
 	return verrs, nil
@@ -85,6 +94,14 @@ func ParseWorkMinutes(raw string) int {
 // WorkTime devuelve el tiempo de trabajo con formato legible.
 func (t Task) WorkTime() string {
 	return FormatMinutes(t.WorkMinutes)
+}
+
+// AssigneeName devuelve el usuario asignado; "—" si la tarea no tiene asignado.
+func (t Task) AssigneeName() string {
+	if t.Assignee == "" {
+		return "—"
+	}
+	return t.Assignee
 }
 
 // DayCount es el número de tareas creadas en un día.
