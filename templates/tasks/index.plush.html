@@ -7,12 +7,16 @@
 
 <section aria-labelledby="list-heading">
   <h2 id="list-heading" class="sr-only">Lista de tareas</h2>
+  <p id="reorder-status" class="sr-only" aria-live="polite"></p>
   <%= if (len(tasks) == 0) { %>
     <p class="empty-state">No hay tareas todavía. Añade la primera con el formulario.</p>
   <% } else { %>
-    <ul class="task-list">
+    <ul class="task-list" data-task-list data-reorder-url="/tasks/reorder" data-token="<%= authenticity_token %>">
       <%= for (t) in tasks { %>
-        <li class="task<%= if (t.Completed) { %> task-completed<% } %>">
+        <li class="task<%= if (t.Completed) { %> task-completed<% } %>" data-task-id="<%= t.ID %>">
+          <button type="button" class="task-handle" data-task-handle aria-label="Mover tarea: <%= t.Title %>" title="Arrastra para reordenar (o usa ↑ y ↓ con el teclado)">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" /><circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" /><circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" /></svg>
+          </button>
           <form action="/tasks/<%= t.ID %>/toggle" method="POST" class="task-toggle" data-task-toggle>
             <input type="hidden" name="authenticity_token" value="<%= authenticity_token %>">
             <input type="hidden" name="_method" value="PUT">
@@ -29,7 +33,7 @@
               <span class="toggle-label sr-only"><%= if (t.Completed) { %>Reabrir<% } else { %>Completar<% } %></span>
             </button>
           </form>
-          <span class="task-title"><%= t.Title %></span>
+          <span class="task-title"><span class="task-title-text"><%= t.Title %></span><%= if (t.Assignee != "") { %> <small class="task-assignee" title="Asignado a"><%= t.Assignee %></small><% } %><%= if (t.WorkMinutes > 0) { %> <small class="task-time" title="Tiempo de trabajo"><%= t.WorkTime() %></small><% } %><time class="task-date" datetime="<%= t.CreatedAt.UTC().Format("2006-01-02T15:04:05Z") %>" title="Fecha de creación"><%= t.CreatedAt.UTC().Format("02/01/2006") %></time></span>
           <%= if (t.Completed) { %>
             <span class="task-status">Completada</span>
           <% } %>
@@ -68,13 +72,39 @@
       placeholder="Añadir una tarea…"
       maxlength="200"
       autocomplete="off"
-      <%= if (errors.HasAny()) { %>autofocus aria-invalid="true" aria-describedby="title-error"<% } %>
+      <%= if (errors.HasAny()) { %>autofocus<% } %> <%= if (len(errors.Get("title")) > 0) { %>aria-invalid="true" aria-describedby="title-error"<% } %>
+    >
+    <input
+      type="text"
+      name="assignee"
+      class="assignee-input"
+      value="<%= task.Assignee %>"
+      placeholder="Asignado a"
+      maxlength="50"
+      autocomplete="off"
+      aria-label="Asignado a"
+      <%= if (len(errors.Get("assignee")) > 0) { %>aria-invalid="true" aria-describedby="title-error"<% } %>
+    >
+    <input
+      type="number"
+      name="work_minutes"
+      class="minutes-input"
+      min="0"
+      max="99999"
+      step="1"
+      inputmode="numeric"
+      placeholder="Min"
+      aria-label="Tiempo de trabajo en minutos"
+      <%= if (task.WorkMinutes > 0) { %>value="<%= task.WorkMinutes %>"<% } %>
+      <%= if (len(errors.Get("work_minutes")) > 0) { %>aria-invalid="true" aria-describedby="title-error"<% } %>
     >
     <button type="submit" class="button button-primary">Añadir</button>
   </div>
   <%= if (errors.HasAny()) { %>
     <p id="title-error" class="field-error" role="alert">
       <%= for (msg) in errors.Get("title") { %><%= msg %><% } %>
+      <%= for (msg) in errors.Get("assignee") { %><%= msg %><% } %>
+      <%= for (msg) in errors.Get("work_minutes") { %><%= msg %><% } %>
     </p>
   <% } %>
 </form>

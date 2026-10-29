@@ -49,8 +49,10 @@ func App() *buffalo.App {
 		app.Use(popmw.Transaction(models.DB))
 
 		app.GET("/", TasksIndex)
+		app.GET("/report", TasksReport)
 		app.POST("/tasks", TasksCreate)
 		app.GET("/tasks/{task_id}/edit", TasksEdit)
+		app.PUT("/tasks/reorder", TasksReorder)
 		app.PUT("/tasks/{task_id}", TasksUpdate)
 		app.PUT("/tasks/{task_id}/toggle", TasksToggle)
 		app.DELETE("/tasks/{task_id}", TasksDestroy)

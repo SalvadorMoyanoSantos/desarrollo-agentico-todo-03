@@ -1,0 +1,49 @@
+<header class="page-header">
+  <h1>Informe de tareas</h1>
+  <p class="list-count">Resumen de las tareas creadas</p>
+</header>
+
+<section aria-labelledby="metrics-heading">
+  <h2 id="metrics-heading" class="sr-only">Resumen</h2>
+  <dl class="report-metrics">
+    <div class="report-metric"><dt>Total</dt><dd><%= report.Total %></dd></div>
+    <div class="report-metric"><dt>Completadas</dt><dd><%= report.Completed %></dd></div>
+    <div class="report-metric"><dt>Pendientes</dt><dd><%= report.Pending %></dd></div>
+    <div class="report-metric"><dt>% completado</dt><dd><%= report.Percent %> %</dd></div>
+    <div class="report-metric"><dt>Tiempo total</dt><dd><%= report.TotalTime %></dd></div>
+  </dl>
+</section>
+
+<%= if (report.Total == 0) { %>
+  <p class="empty-state">No hay tareas todavía.</p>
+<% } else { %>
+  <section aria-labelledby="byday-heading">
+    <h2 id="byday-heading">Tareas creadas por día</h2>
+    <table class="report-table">
+      <thead><tr><th scope="col">Día</th><th scope="col">Tareas</th></tr></thead>
+      <tbody>
+        <%= for (d) in report.ByDay { %>
+          <tr><td><%= d.Day %></td><td><%= d.Count %></td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </section>
+
+  <section aria-labelledby="all-heading">
+    <h2 id="all-heading">Listado de tareas</h2>
+    <table class="report-table">
+      <thead><tr><th scope="col">Tarea</th><th scope="col">Estado</th><th scope="col">Asignado a</th><th scope="col">Tiempo</th><th scope="col">Creada</th></tr></thead>
+      <tbody>
+        <%= for (t) in tasks { %>
+          <tr>
+            <td><%= t.Title %></td>
+            <td><%= if (t.Completed) { %>Completada<% } else { %>Pendiente<% } %></td>
+            <td><%= t.AssigneeName() %></td>
+            <td><%= t.WorkTime() %></td>
+            <td><%= t.CreatedAt.Format("02/01/2006") %></td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </section>
+<% } %>
