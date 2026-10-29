@@ -309,6 +309,14 @@ input[type="number"] {
   white-space: nowrap;
 }
 
+.task-date {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
 .field-label-spaced {
   margin-top: 1.25rem;
 }

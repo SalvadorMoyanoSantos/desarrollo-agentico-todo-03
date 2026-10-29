@@ -3,6 +3,7 @@ package actions
 import (
 	"net/url"
 	"strings"
+	"time"
 
 	"todo/models"
 
@@ -468,6 +469,20 @@ func (as *ActionSuite) Test_TasksReport_ShowsWorkTime() {
 	as.Contains(body, "<dd>2 h 15 min</dd>")
 	as.Contains(body, `<th scope="col">Tiempo</th>`)
 	as.Contains(body, "<td>1 h 30 min</td>")
+}
+
+func (as *ActionSuite) Test_TasksIndex_ShowsCreatedDate() {
+	task := &models.Task{Title: "Con fecha", CreatedAt: time.Date(2026, 10, 22, 12, 0, 0, 0, time.UTC)}
+	verrs, err := as.DB.ValidateAndCreate(task)
+	as.NoError(err)
+	as.False(verrs.HasAny())
+
+	res := as.HTML("/").Get()
+	as.Equal(200, res.Code)
+	body := res.Body.String()
+	as.Contains(body, `datetime="2026-10-22T12:00:00Z"`)
+	as.Contains(body, `<time class="task-date"`)
+	as.Contains(body, ">22/10/2026</time>")
 }
 
 func (as *ActionSuite) Test_TasksIndex_TitleTextExcludesTime() {

@@ -33,7 +33,7 @@
               <span class="toggle-label sr-only"><%= if (t.Completed) { %>Reabrir<% } else { %>Completar<% } %></span>
             </button>
           </form>
-          <span class="task-title"><span class="task-title-text"><%= t.Title %></span><%= if (t.WorkMinutes > 0) { %> <small class="task-time" title="Tiempo de trabajo"><%= t.WorkTime() %></small><% } %></span>
+          <span class="task-title"><span class="task-title-text"><%= t.Title %></span><%= if (t.WorkMinutes > 0) { %> <small class="task-time" title="Tiempo de trabajo"><%= t.WorkTime() %></small><% } %><time class="task-date" datetime="<%= t.CreatedAt.UTC().Format("2006-01-02T15:04:05Z") %>" title="Fecha de creación"><%= t.CreatedAt.UTC().Format("02/01/2006") %></time></span>
           <%= if (t.Completed) { %>
             <span class="task-status">Completada</span>
           <% } %>
